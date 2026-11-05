@@ -13,6 +13,24 @@ describe('constraintValidator', () => {
             expect(validate('3.14')).toEqual([true, '']);
         });
 
+        test('accepts decimal and scientific notation', () => {
+            expect(validate('1')).toEqual([true, '']);
+            expect(validate('-1.5')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+        });
+
+        test.each([
+            'Infinity',
+            '+Infinity',
+            '-Infinity',
+            '1e309',
+            '-1e309',
+        ])('rejects non-finite value %s', (value) => {
+            const [valid, message] = validate(value);
+            expect(valid).toBe(false);
+            expect(message).toBe('Value must be a number');
+        });
+
         test('rejects non-numeric strings', () => {
             const [valid] = validate('abc');
             expect(valid).toBe(false);
