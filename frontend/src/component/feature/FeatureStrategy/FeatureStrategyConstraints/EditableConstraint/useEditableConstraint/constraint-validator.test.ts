@@ -23,6 +23,34 @@ describe('constraintValidator', () => {
             expect(valid).toBe(false);
             expect(message).toContain('Comma');
         });
+
+        test('rejects non-finite numbers', () => {
+            for (const value of [
+                'Infinity',
+                '+Infinity',
+                '-Infinity',
+                '1e309',
+                '-1e309',
+            ]) {
+                expect(validate(value)[0]).toBe(false);
+            }
+            expect(validate('Infinity')).toEqual([
+                false,
+                'Value must be a number',
+            ]);
+        });
+
+        test('accepts finite decimal and scientific notation', () => {
+            for (const value of ['1', '-1.5', '1e3', '1.5e-3']) {
+                expect(validate(value)).toEqual([true, '']);
+            }
+        });
+
+        test('keeps comma hint for decimal comma input', () => {
+            const [valid, message] = validate('1,5');
+            expect(valid).toBe(false);
+            expect(message).toContain('Comma');
+        });
     });
 
     describe('semver operator', () => {
