@@ -51,16 +51,18 @@ describe('constraintValidator', () => {
             expect(message).toContain('Comma');
         });
 
-        test.each(['NUM_GT', 'NUM_GTE', 'NUM_LT', 'NUM_LTE'] as const)(
-            '%s rejects non-finite values',
-            (operator) => {
-                const numValidate = constraintValidator(operator);
-                for (const value of ['Infinity', '-Infinity', '1e309']) {
-                    expect(numValidate(value)[0]).toBe(false);
-                }
-                expect(numValidate('42')).toEqual([true, '']);
-            },
-        );
+        test.each([
+            'NUM_GT',
+            'NUM_GTE',
+            'NUM_LT',
+            'NUM_LTE',
+        ] as const)('%s rejects non-finite values', (operator) => {
+            const numValidate = constraintValidator(operator);
+            for (const value of ['Infinity', '-Infinity', '1e309']) {
+                expect(numValidate(value)[0]).toBe(false);
+            }
+            expect(numValidate('42')).toEqual([true, '']);
+        });
     });
 
     describe('semver operator', () => {
