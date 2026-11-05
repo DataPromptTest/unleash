@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { allOperators } from 'constants/operators';
 import { constraintValidator } from './constraint-validator';
+import { getInvalidLegalValues } from './legal-value-functions';
 
 describe('constraintValidator', () => {
     describe('number operator', () => {
@@ -22,6 +23,57 @@ describe('constraintValidator', () => {
             const [valid, message] = validate('3,14');
             expect(valid).toBe(false);
             expect(message).toContain('Comma');
+        });
+    });
+
+    describe('numeric operators reject non-finite values', () => {
+        const validate = constraintValidator('NUM_EQ');
+
+        test.each(['Infinity', '+Infinity', '-Infinity', '1e309', '-1e309'])(
+            'rejects non-finite value %s',
+            (value) => {
+                const [valid, message] = validate(value);
+                expect(valid).toBe(false);
+                expect(message).toBe('Value must be a number');
+            },
+        );
+
+        test('accepts decimal and scientific notation', () => {
+            expect(validate('1.5')).toEqual([true, '']);
+            expect(validate('-2')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+        });
+
+        test('keeps the comma decimal hint', () => {
+            const [valid, message] = validate('1,5');
+            expect(valid).toBe(false);
+            expect(message).toContain('Comma');
+        });
+
+        test('other numeric operators also reject non-finite values', () => {
+            const validateGt = constraintValidator('NUM_GT');
+            expect(validateGt('Infinity')[0]).toBe(false);
+            expect(validateGt('-1e309')[0]).toBe(false);
+            expect(validateGt('1.5')).toEqual([true, '']);
+        });
+
+        test('getInvalidLegalValues flags non-finite legal values', () => {
+            const invalid = getInvalidLegalValues(
+                (value: string) => validate(value)[0],
+                [
+                    { value: '1.5' },
+                    { value: 'Infinity' },
+                    { value: '-Infinity' },
+                    { value: '1e309' },
+                    { value: '-1e309' },
+                ],
+            );
+            expect([...invalid]).toEqual([
+                'Infinity',
+                '-Infinity',
+                '1e309',
+                '-1e309',
+            ]);
         });
     });
 
