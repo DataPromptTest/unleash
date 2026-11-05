@@ -23,6 +23,44 @@ describe('constraintValidator', () => {
             expect(valid).toBe(false);
             expect(message).toContain('Comma');
         });
+
+        test('accepts decimal and scientific notation values', () => {
+            expect(validate('1')).toEqual([true, '']);
+            expect(validate('-2.5')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+            expect(validate('1.5e-3')).toEqual([true, '']);
+        });
+
+        test('rejects non-finite values', () => {
+            for (const value of [
+                'Infinity',
+                '+Infinity',
+                '-Infinity',
+                '1e309',
+                '-1e309',
+            ]) {
+                const [valid, message] = validate(value);
+                expect(valid, `expected ${value} to be rejected`).toBe(false);
+                expect(message).toBe('Value must be a number');
+            }
+        });
+
+        test('keeps the comma hint for non-finite-looking comma values', () => {
+            const [valid, message] = validate('1,5e3');
+            expect(valid).toBe(false);
+            expect(message).toContain('Comma');
+        });
+
+        test.each(['NUM_GT', 'NUM_GTE', 'NUM_LT', 'NUM_LTE'] as const)(
+            '%s rejects non-finite values',
+            (operator) => {
+                const numValidate = constraintValidator(operator);
+                for (const value of ['Infinity', '-Infinity', '1e309']) {
+                    expect(numValidate(value)[0]).toBe(false);
+                }
+                expect(numValidate('42')).toEqual([true, '']);
+            },
+        );
     });
 
     describe('semver operator', () => {
