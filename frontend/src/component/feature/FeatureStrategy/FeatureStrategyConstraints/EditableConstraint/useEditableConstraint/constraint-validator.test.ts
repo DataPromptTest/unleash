@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import { allOperators } from 'constants/operators';
+import type { ILegalValue } from 'interfaces/context';
 import { constraintValidator } from './constraint-validator';
+import { getInvalidLegalValues } from './legal-value-functions';
 
 describe('constraintValidator', () => {
     describe('number operator', () => {
@@ -22,6 +24,40 @@ describe('constraintValidator', () => {
             const [valid, message] = validate('3,14');
             expect(valid).toBe(false);
             expect(message).toContain('Comma');
+        });
+
+        test('rejects non-finite values', () => {
+            for (const value of [
+                'Infinity',
+                '+Infinity',
+                '-Infinity',
+                '1e309',
+                '-1e309',
+            ]) {
+                const [valid, message] = validate(value);
+                expect(valid, value).toBe(false);
+                expect(message, value).toBe('Value must be a number');
+            }
+        });
+
+        test('accepts finite decimal and scientific notation values', () => {
+            expect(validate('1')).toEqual([true, '']);
+            expect(validate('-2.5')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+        });
+
+        test('flags non-finite legal values as invalid', () => {
+            const legalValues = [
+                { value: '1' },
+                { value: 'Infinity' },
+                { value: '2.5' },
+                { value: '-1e309' },
+            ] as ILegalValue[];
+
+            const isValid = (value: string) => validate(value)[0];
+            expect(getInvalidLegalValues(isValid, legalValues)).toEqual(
+                new Set(['Infinity', '-1e309']),
+            );
         });
     });
 
