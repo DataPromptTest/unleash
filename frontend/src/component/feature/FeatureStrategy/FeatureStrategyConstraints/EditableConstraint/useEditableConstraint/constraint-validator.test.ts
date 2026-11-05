@@ -29,14 +29,17 @@ describe('constraintValidator', () => {
     describe('numeric operators reject non-finite values', () => {
         const validate = constraintValidator('NUM_EQ');
 
-        test.each(['Infinity', '+Infinity', '-Infinity', '1e309', '-1e309'])(
-            'rejects non-finite value %s',
-            (value) => {
-                const [valid, message] = validate(value);
-                expect(valid).toBe(false);
-                expect(message).toBe('Value must be a number');
-            },
-        );
+        test.each([
+            'Infinity',
+            '+Infinity',
+            '-Infinity',
+            '1e309',
+            '-1e309',
+        ])('rejects non-finite value %s', (value) => {
+            const [valid, message] = validate(value);
+            expect(valid).toBe(false);
+            expect(message).toBe('Value must be a number');
+        });
 
         test('accepts decimal and scientific notation', () => {
             expect(validate('1.5')).toEqual([true, '']);
