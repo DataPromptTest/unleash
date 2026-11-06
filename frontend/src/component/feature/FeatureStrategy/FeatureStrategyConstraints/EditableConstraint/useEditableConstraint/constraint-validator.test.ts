@@ -18,6 +18,42 @@ describe('constraintValidator', () => {
             expect(valid).toBe(false);
         });
 
+        test('rejects non-finite numbers', () => {
+            for (const value of [
+                'Infinity',
+                '+Infinity',
+                '-Infinity',
+                '1e309',
+                '-1e309',
+            ]) {
+                const [valid, message] = validate(value);
+                expect(valid, `expected ${value} to be rejected`).toBe(false);
+                expect(message).toBe('Value must be a number');
+            }
+        });
+
+        test('accepts valid decimal and scientific notation', () => {
+            expect(validate('1.5')).toEqual([true, '']);
+            expect(validate('-2')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+            expect(validate('-1.5e-3')).toEqual([true, '']);
+        });
+
+        test('rejects non-finite numbers for every numeric operator', () => {
+            for (const operator of [
+                'NUM_EQ',
+                'NUM_GT',
+                'NUM_GTE',
+                'NUM_LT',
+                'NUM_LTE',
+            ] as const) {
+                const numericValidate = constraintValidator(operator);
+                expect(numericValidate('Infinity')[0]).toBe(false);
+                expect(numericValidate('-1e309')[0]).toBe(false);
+                expect(numericValidate('2.5')).toEqual([true, '']);
+            }
+        });
+
         test('gives a hint when comma is used as decimal separator', () => {
             const [valid, message] = validate('3,14');
             expect(valid).toBe(false);
