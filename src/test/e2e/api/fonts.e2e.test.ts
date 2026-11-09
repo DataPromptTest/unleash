@@ -16,12 +16,17 @@ let db: ITestDb;
 let publicFolder: string;
 
 beforeAll(async () => {
-    // loadIndexHTML requires an index.html in publicFolder, so use a temp folder
-    // that holds one plus a copy of the committed Sen stylesheet.
+    // loadIndexHTML requires an index.html in publicFolder and serve-favicon
+    // stats favicon.ico at startup, so use a temp folder that holds both plus
+    // a copy of the committed Sen stylesheet.
     publicFolder = fs.mkdtempSync(path.join(os.tmpdir(), 'unleash-fonts-'));
     fs.writeFileSync(
         path.join(publicFolder, 'index.html'),
         '<!doctype html><html><head></head><body></body></html>',
+    );
+    fs.copyFileSync(
+        path.join(__dirname, '../../../../frontend/public/favicon.ico'),
+        path.join(publicFolder, 'favicon.ico'),
     );
     const fontDir = path.join(publicFolder, 'fonts', 'sen', 'v1');
     fs.mkdirSync(fontDir, { recursive: true });
