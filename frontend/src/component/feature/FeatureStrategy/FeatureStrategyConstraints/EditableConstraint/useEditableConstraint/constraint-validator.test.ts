@@ -23,6 +23,31 @@ describe('constraintValidator', () => {
             expect(valid).toBe(false);
             expect(message).toContain('Comma');
         });
+
+        test('accepts decimal and scientific notation', () => {
+            expect(validate('1.5')).toEqual([true, '']);
+            expect(validate('-2')).toEqual([true, '']);
+            expect(validate('1e3')).toEqual([true, '']);
+            expect(validate('-2.5e-3')).toEqual([true, '']);
+        });
+
+        test.each([
+            'Infinity',
+            '+Infinity',
+            '-Infinity',
+            '1e309',
+            '-1e309',
+        ])('rejects non-finite value %s', (value) => {
+            const [valid, message] = validate(value);
+            expect(valid).toBe(false);
+            expect(message).toBe('Value must be a number');
+        });
+
+        test('keeps the comma hint for comma-separated values', () => {
+            const [valid, message] = validate('1,5');
+            expect(valid).toBe(false);
+            expect(message).toContain('Comma');
+        });
     });
 
     describe('semver operator', () => {
